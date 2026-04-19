@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>16. Todo App</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); padding: 25px; }
+    input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+    button { padding: 12px 20px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 12px; background: #f9f9f9; margin: 8px 0; border-radius: 8px; display: flex; align-items: center; }
+    li.done { text-decoration: line-through; opacity: 0.7; }
+    .filters { margin: 15px 0; }
+    .filters button { margin-right: 8px; padding: 8px 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Todo List</h1>
+    <div>
+      <input type="text" id="taskInput" placeholder="Yangi vazifa...">
+      <button onclick="addTask()">Qo‘shish</button>
+    </div>
+
+    <div class="filters">
+      <button onclick="filterTasks('all')">Barchasi</button>
+      <button onclick="filterTasks('active')">Faol</button>
+      <button onclick="filterTasks('completed')">Bajarilgan</button>
+    </div>
+
+    <input type="text" id="search" placeholder="Qidirish..." onkeyup="filterTasks('all')" style="width:100%; margin:10px 0;">
+
+    <ul id="todoList"></ul>
+    <p>Jami: <span id="count">0</span> ta</p>
+  </div>
+
+  <script>
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    let currentFilter = 'all';
+
+    function render() {
+      const list = document.getElementById('todoList');
+      list.innerHTML = '';
+      let filtered = todos;
+
+      const searchTerm = document.getElementById('search').value.toLowerCase();
+      if (searchTerm) {
+        filtered = filtered.filter(t => t.text.toLowerCase().includes(searchTerm));
+      }
+
+      if (currentFilter === 'active') filtered = filtered.filter(t => !t.done);
+      if (currentFilter === 'completed') filtered = filtered.filter(t => t.done);
+
+      filtered.forEach((todo, index) => {
+        const li = document.createElement('li');
+        li.className = todo.done ? 'done' : '';
+        li.innerHTML = `
+          <input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleDone(${index})">
+          <span style="flex:1; margin-left:10px;">${todo.text}</span>
+          <button onclick="deleteTask(${index})" style="background:red;color:white;border:none;padding:5px 10px;">O‘chirish</button>
+        `;
+        list.appendChild(li);
+      });
+
+      document.getElementById('count').textContent = filtered.length;
+      localStorage.setItem('todos', JSON.stringify(todos));
+    }
+
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      if (!input.value.trim()) return;
+      todos.push({ text: input.value.trim(), done: false });
+      input.value = '';
+      render();
+    }
+
+    function toggleDone(index) {
+      todos[index].done = !todos[index].done;
+      render();
+    }
+
+    function deleteTask(index) {
+      todos.splice(index, 1);
+      render();
+    }
+
+    function filterTasks(filter) {
+      currentFilter = filter;
+      render();
+    }
+
+    // Enter bilan qo‘shish
+    document.getElementById('taskInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    render();
+  </script>
+</body>
+</html>
